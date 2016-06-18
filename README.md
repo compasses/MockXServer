@@ -36,10 +36,13 @@ online时会把请求和对应的相应存储起来作为replayDB，当真实服
 4. listenOn, APIService的监听地址。
 5. LogFile, 日志文件名字。留空的话直接打印到命令行窗口。
 
-## 总体结构图：
+## 结构图：
+
+## 运行流程图
 ![architecture](./architecture.PNG)
 
 ### Third party lib
 
 1. [httprouter](http://godoc.org/github.com/julienschmidt/httprouter)
 2. [boltDB](http://godoc.org/github.com/boltdb/bolt)
+3. [PACT-go](https://github.com/SEEK-Jobs/pact-go)
