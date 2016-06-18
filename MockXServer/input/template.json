@@ -1,0 +1,44 @@
+{
+    "paths": {
+      "/path/to/template": {
+          "POST": [
+              {
+                  "request":{
+                      "goodstart": "10000"
+                  },
+                  "response":{
+                    "200":{
+                       "defaultBillToAddress": null,
+                       "defaultShipToAddress": null,
+                       "displayName": "Ddd"
+                    }
+                  }
+              },
+              {
+                  "request":{
+                      "goodstart": "1"
+                  },
+                  "response":{
+                    "400":{
+                       "defaultBillToAddress": null,
+                       "defaultShipToAddress": null,
+                       "displayName": "Ddd"
+                    }
+                  }
+              }
+          ],
+          "GET":[
+            {
+              "request":null,
+              "response":{
+                "200":{
+                   "defaultBillToAddress": null,
+                   "defaultShipToAddress": null,
+                   "displayName": "Ddd"
+                }
+              }
+            }
+          ]
+      }
+    }
+  }
