@@ -104,6 +104,8 @@ const banner string = `
 
 func main() {
 	log.Println(banner)
+	log.Printf("Git commit:%s\n", Version)
+	log.Printf("Build time:%s\n", Compile)
 	// router := offline.NewMiddleware()
 	// router.TestTruncate()
 	StartServer()
