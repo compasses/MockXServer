@@ -1,4 +1,4 @@
-package offline
+package middleware
 
 import (
 	"bytes"
@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/compasses/MockXServer/utils"
 	"github.com/SEEK-Jobs/pact-go"
 	"github.com/SEEK-Jobs/pact-go/provider"
+	"github.com/compasses/MockXServer/utils"
 )
 
 const PactsDir = "./pacts"
@@ -50,7 +50,7 @@ func (c *ProviderAPIClient) ClientRun(method, path string, reqBody interface{}) 
 	return nil
 }
 
-func (middleware *offlinemiddleware) GetPactFile() string {
+func (middleware *middleWare) GetPactFile() string {
 	files, err := ioutil.ReadDir(PactsDir)
 	if err != nil {
 		log.Println(err)
@@ -64,14 +64,14 @@ func (middleware *offlinemiddleware) GetPactFile() string {
 	return ""
 }
 
-func (middleware *offlinemiddleware) buildPact(consumerName, providerName string) pact.Builder {
+func (middleware *middleWare) buildPact(consumerName, providerName string) pact.Builder {
 	return pact.
 		NewConsumerPactBuilder(&pact.BuilderConfig{PactPath: PactsDir}).
 		ServiceConsumer(consumerName).
 		HasPactWith(providerName)
 }
 
-func (middleware *offlinemiddleware) RunPact(builder pact.Builder, path, method string, reqBody, respBody interface{}, statusCode int,
+func (middleware *middleWare) RunPact(builder pact.Builder, path, method string, reqBody, respBody interface{}, statusCode int,
 	consumerName, providerName string) {
 	ms, msUrl := builder.GetMockProviderService()
 
@@ -118,7 +118,7 @@ func (middleware *offlinemiddleware) RunPact(builder pact.Builder, path, method 
 	ms.ClearInteractions()
 }
 
-func (middleware *offlinemiddleware) GenPactWithProvider() {
+func (middleware *middleWare) GenPactWithProvider() {
 	builder := middleware.buildPact("EShop Online Store", "EShop Adaptor")
 	//map[string]map[string][]interface{}
 	//"Path", "Method", "[req..., rsp...,]"

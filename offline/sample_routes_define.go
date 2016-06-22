@@ -1,6 +1,7 @@
 package offline
 
 import (
+	"github.com/boltdb/bolt"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -116,4 +117,23 @@ var routes = Routes{
 	// 	"/json",
 	// 	GenerateJSON,
 	// },
+}
+
+func NewServerRouter(db *bolt.DB) *httprouter.Router {
+	router := httprouter.New()
+
+	for _, route := range routes {
+		httpHandle := Logger(route.HandleFunc, route.Name)
+
+		router.Handle(
+			route.Method,
+			route.Pattern,
+			httpHandle,
+		)
+	}
+
+	router.NotFound = LoggerNotFound(NotFoundHandler)
+	GlobalDB = db
+
+	return router
 }

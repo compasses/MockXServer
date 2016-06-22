@@ -52,7 +52,7 @@ func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 func BackupDB(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	err := GlobalDB.View(func(tx *bolt.Tx) error {
 		w.Header().Set("Content-Type", "application/octet-stream")
-		w.Header().Set("Content-Disposition", `attachment; filename="EshopOfflineServerDB"`)
+		w.Header().Set("Content-Disposition", `attachment; filename="ReplayDB"`)
 		w.Header().Set("Content-Length", strconv.Itoa(int(tx.Size())))
 		_, err := tx.WriteTo(w)
 		return err

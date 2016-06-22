@@ -1,4 +1,4 @@
-package offline
+package middleware
 
 import (
 	"bytes"
@@ -11,48 +11,107 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/Compasses/MockXServer/offline"
+	"github.com/Compasses/MockXServer/online"
 	"github.com/compasses/MockXServer/db"
 	"github.com/compasses/MockXServer/utils"
-	"github.com/boltdb/bolt"
-	"github.com/julienschmidt/httprouter"
 )
 
-type offlinemiddleware struct {
-	router   *httprouter.Router
-	replaydb *db.ReplayDB
+type config struct {
+	RunMode      string
+	TLS          string
+	RemoteServer string
+	ListenOn     string
+	LogFile      string
+	GrabIF       string
 }
 
-func NewMiddleware() *offlinemiddleware {
-	router := httprouter.New()
+func GetConfiguration() (conf *config, err error) {
+	//get configuration
+	file, err := os.Open("./config.json")
+	if err != nil {
+		log.Println("read file failed...", err)
+		log.Println("Just run in offline mode")
+		return nil, err
+	}
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Println("read file failed...", err)
+		log.Println("Just run in offline mode")
+		return nil, err
+	} else {
+		json.Unmarshal(data, &conf)
+		log.Println("get configuration:", string(data))
+	}
+	return conf, nil
+}
+
+type middleWare struct {
+	conf     *config
+	handler  http.Handler
+	replaydb *db.ReplayDB
+	runmode  int
+}
+
+func NewMiddleware() *middleWare {
+	conf, err := GetConfiguration()
+	if err != nil {
+		return nil
+	}
+	// set log format
+	if len(conf.LogFile) > 0 {
+		f, err := os.OpenFile(conf.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Println("error opening file: %v", err)
+		}
+
+		log.SetOutput(f)
+		go func(f *os.File) {
+			for {
+				f.Sync()
+				time.Sleep(time.Second)
+			}
+		}(f)
+	} else {
+		log.Println("Not assign log file, just print to command window.")
+	}
+	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
+
+	middleware := new(middleWare)
+	middleware.conf = conf
 	db, err := db.NewReplayDB()
 	db.ReadDir("./input")
 	if err != nil {
 		log.Println("Open replayDB error ", err)
+		return nil
+	}
+	middleware.replaydb = db
+
+	if conf.RunMode == "offline" {
+		log.Println("MockXServer Run in offline mode...")
+		middleware.handler = offline.NewServerRouter(db.GetDB())
+		middleware.runmode = 0
+	} else {
+		log.Println("MockXServer Run in online mode...")
+		middleware.handler = online.NewProxyHandler(conf.RemoteServer, conf.GrabIF)
+		middleware.runmode = 1
 	}
 
-	for _, route := range routes {
-		httpHandle := Logger(route.HandleFunc, route.Name)
+	return middleware
+}
 
-		router.Handle(
-			route.Method,
-			route.Pattern,
-			httpHandle,
-		)
-	}
-
-	router.NotFound = LoggerNotFound(NotFoundHandler)
-	GlobalDB, err = bolt.Open("./OfflineDB", 0666, nil)
-	if err != nil {
-		log.Println("Open OfflineDB error ", err)
-	}
-	return &offlinemiddleware{
-		router:   router,
-		replaydb: db,
+func (middle *middleWare) Run() {
+	log.Println("Listen ON: ", middle.conf.ListenOn)
+	if middle.conf.TLS == "on" {
+		log.Fatal(http.ListenAndServeTLS(middle.conf.ListenOn, "cert.pem", "key.pem", middle))
+	} else {
+		log.Fatal(http.ListenAndServe(middle.conf.ListenOn, middle))
 	}
 }
 
-func (middleware *offlinemiddleware) returnFile(w http.ResponseWriter, filename, attachName string) {
+func (middleware *middleWare) returnFile(w http.ResponseWriter, filename, attachName string) {
 	f, err := os.Open(filename)
 	if err != nil {
 		w.WriteHeader(500)
@@ -72,7 +131,7 @@ func (middleware *offlinemiddleware) returnFile(w http.ResponseWriter, filename,
 	io.Copy(w, f)
 }
 
-func (middleware *offlinemiddleware) TestTruncate() {
+func (middleware *middleWare) TestTruncate() {
 	dbFile := middleware.replaydb.GetDBFilePath()
 	middleware.replaydb.Close()
 	fmt.Println("DB file ", dbFile)
@@ -86,7 +145,7 @@ func (middleware *offlinemiddleware) TestTruncate() {
 	}
 }
 
-func (middleware *offlinemiddleware) Truncate(w http.ResponseWriter) {
+func (middleware *middleWare) Truncate(w http.ResponseWriter) {
 	dbFile := middleware.replaydb.GetDBFilePath()
 	middleware.replaydb.Close()
 	db, err := os.OpenFile(dbFile, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, os.ModePerm)
@@ -105,18 +164,18 @@ func (middleware *offlinemiddleware) Truncate(w http.ResponseWriter) {
 	w.Write([]byte("<h1>Truncate successful</h1>"))
 }
 
-func (middleware *offlinemiddleware) TestPactGen() {
+func (middleware *middleWare) TestPactGen() {
 	middleware.replaydb.ReadDir("./input")
 	middleware.GenPactWithProvider()
 }
 
-func (middleware *offlinemiddleware) GenerateJSON(w http.ResponseWriter) {
+func (middleware *middleWare) GenerateJSON(w http.ResponseWriter) {
 	middleware.replaydb.ReadDir("./input")
 	filename := middleware.replaydb.SerilizeToFile()
 	middleware.returnFile(w, filename, "JSONFile.json")
 }
 
-func (middleware *offlinemiddleware) GeneratePACT(w http.ResponseWriter) {
+func (middleware *middleWare) GeneratePACT(w http.ResponseWriter) {
 	middleware.replaydb.ReadDir("./input")
 	middleware.GenPactWithProvider()
 	pactfile := middleware.GetPactFile()
@@ -128,12 +187,13 @@ func (middleware *offlinemiddleware) GeneratePACT(w http.ResponseWriter) {
 	}
 }
 
-func (middleware *offlinemiddleware) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (middleware *middleWare) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	newbody := make([]byte, req.ContentLength)
 	req.Body.Read(newbody)
 	path := strings.Split(req.RequestURI, "?")
 
 	log.Println("try to get ", path[0], req.Method, string(newbody))
+
 	if path[0] == "/json" {
 		middleware.GenerateJSON(w)
 		return
@@ -152,7 +212,7 @@ func (middleware *offlinemiddleware) ServeHTTP(w http.ResponseWriter, req *http.
 		if err != nil {
 			log.Println("new http request failed ", err)
 		}
-		middleware.router.ServeHTTP(w, newRq)
+		middleware.handler.ServeHTTP(w, newRq)
 	} else {
 		result, _ := utils.TOJsonInterface(res)
 		log.Println("Get response from replaydb on offline mode ", (result))
@@ -174,22 +234,4 @@ func (middleware *offlinemiddleware) ServeHTTP(w http.ResponseWriter, req *http.
 			break
 		}
 	}
-}
-
-func ServerRouter() *httprouter.Router {
-	router := httprouter.New()
-
-	for _, route := range routes {
-		httpHandle := Logger(route.HandleFunc, route.Name)
-
-		router.Handle(
-			route.Method,
-			route.Pattern,
-			httpHandle,
-		)
-	}
-
-	router.NotFound = LoggerNotFound(NotFoundHandler)
-
-	return router
 }

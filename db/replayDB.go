@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/compasses/MockXServer/utils"
 	"github.com/boltdb/bolt"
+	"github.com/compasses/MockXServer/utils"
 )
 
 type ReplayDB struct {
@@ -105,6 +105,10 @@ func (replay *ReplayDB) Open(path string) {
 	if err != nil {
 		log.Println("Open DB error:", err)
 	}
+}
+
+func (replay *ReplayDB) GetDB() *bolt.DB {
+	return replay.db
 }
 
 func (replay *ReplayDB) GetJSONMap() (outmap map[string]map[string][]interface{}) {
