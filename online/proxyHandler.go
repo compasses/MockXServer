@@ -22,7 +22,7 @@ type ProxyRoute struct {
 	db     *db.ReplayDB
 }
 
-func NewProxyHandler(newurl, grabIF string) *ProxyRoute {
+func NewProxyHandler(newurl, grabIF string, db *db.ReplayDB) *ProxyRoute {
 	tr := &http.Transport{
 		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
 		DisableCompression: true,
@@ -44,15 +44,12 @@ func NewProxyHandler(newurl, grabIF string) *ProxyRoute {
 			}
 		}()
 	}
-	newDB, err := db.NewReplayDB()
-	if err != nil {
-		log.Println("Open ReplayDB Error ", err)
-	}
+
 	return &ProxyRoute{
 		client: &http.Client{Transport: tr},
 		url:    newurl,
 		GrabIF: grabIF,
-		db:     newDB}
+		db:     db}
 }
 
 func (proxy *ProxyRoute) doReq(NeedLog bool, path, method, requestBody string, newRq *http.Request) (resp *http.Response, res []byte) {
@@ -119,13 +116,5 @@ func (proxy *ProxyRoute) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.Write(res)
-	// res, err := proxy.db.GetResponse(path[0], req.Method, string(newbody))
-	// if err != nil || len(res) == 0 {
-	// 	log.Println("Cannot get response from replaydb ", err)
-	//
-	// } else {
-	// 	log.Println("Get response from replaydb ", string(res))
-	// 	w.Write(res)
-	// }
 
 }

@@ -15,8 +15,8 @@ type ReplayDB struct {
 	reqRspKey string
 }
 
-func NewReplayDB() (*ReplayDB, error) {
-	dbopen, err := bolt.Open("./ReplayDB", 0600, nil)
+func NewReplayDB(path string) (*ReplayDB, error) {
+	dbopen, err := bolt.Open(path, 0600, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -81,21 +81,27 @@ func NewMiddleware() *middleWare {
 
 	middleware := new(middleWare)
 	middleware.conf = conf
-	db, err := db.NewReplayDB()
-	db.ReadDir("./input")
+	dbreplay, err := db.NewReplayDB("./ReplayDB")
+	dbreplay.ReadDir("./input")
 	if err != nil {
 		log.Println("Open replayDB error ", err)
 		return nil
 	}
-	middleware.replaydb = db
+	middleware.replaydb = dbreplay
 
 	if conf.RunMode == "offline" {
 		log.Println("MockXServer Run in offline mode...")
-		middleware.handler = offline.NewServerRouter(db.GetDB())
+		offlineDB, err := db.NewReplayDB("./OfflineDB")
+		if err != nil {
+			log.Println("Open OfflineDB error ", err)
+			return nil
+		}
+
+		middleware.handler = offline.NewServerRouter(offlineDB.GetDB())
 		middleware.runmode = 0
 	} else {
 		log.Println("MockXServer Run in online mode...")
-		middleware.handler = online.NewProxyHandler(conf.RemoteServer, conf.GrabIF)
+		middleware.handler = online.NewProxyHandler(conf.RemoteServer, conf.GrabIF, middleware.replaydb)
 		middleware.runmode = 1
 	}
 
