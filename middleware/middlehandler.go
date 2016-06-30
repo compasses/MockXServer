@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Compasses/MockXServer/utils"
+	"github.com/compasses/MockXServer/utils"
 )
 
 func (middleware *middleWare) SaveNotFound(path, method, reqBody, respBody string, statusCode int) (err error) {
@@ -24,14 +24,12 @@ func (middleware *middleWare) SaveNotFound(path, method, reqBody, respBody strin
 	filename = "./input/" + filename
 
 	result := map[string]interface{}{
-		path: map[string][]interface{} {
-    {
-    method: map[string]interface{} {
-    "request": finalReq,
-    "response":finalResp,
-  }
-  },
-  },
+		path: map[string]interface{}{
+			method: map[string]interface{}{
+				"request":  finalReq,
+				"response": finalResp,
+			},
+		},
 	}
 
 	jsonStr, err := json.MarshalIndent(result, "", "    ")
