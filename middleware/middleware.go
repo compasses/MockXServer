@@ -3,8 +3,6 @@ package middleware
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Compasses/MockXServer/offline"
-	"github.com/Compasses/MockXServer/online"
 	"github.com/compasses/MockXServer/db"
+	"github.com/compasses/MockXServer/offline"
+	"github.com/compasses/MockXServer/online"
 	"github.com/compasses/MockXServer/utils"
 )
 
@@ -117,87 +115,11 @@ func (middle *middleWare) Run() {
 	}
 }
 
-func (middleware *middleWare) returnFile(w http.ResponseWriter, filename, attachName string) {
-	f, err := os.Open(filename)
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	fileInfo, err := f.Stat()
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", `attachment; filename=`+attachName)
-	w.Header().Set("Content-Length", strconv.Itoa(int(fileInfo.Size())))
-	io.Copy(w, f)
-}
-
-func (middleware *middleWare) TestTruncate() {
-	dbFile := middleware.replaydb.GetDBFilePath()
-	middleware.replaydb.Close()
-	fmt.Println("DB file ", dbFile)
-	db, err := os.OpenFile(dbFile, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, os.ModePerm)
-	if err != nil {
-		fmt.Println("OPen error ", err)
-	}
-	err = db.Truncate(0)
-	if err != nil {
-		fmt.Println("Truncate error ", err)
-	}
-}
-
-func (middleware *middleWare) Truncate(w http.ResponseWriter) {
-	dbFile := middleware.replaydb.GetDBFilePath()
-	middleware.replaydb.Close()
-	db, err := os.OpenFile(dbFile, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, os.ModePerm)
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		log.Println("OPen error ", err)
-	}
-	err = db.Truncate(0)
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		log.Println("Truncate error ", err)
-	}
-	w.WriteHeader(200)
-	w.Write([]byte("<h1>Truncate successful</h1>"))
-}
-
-func (middleware *middleWare) TestPactGen() {
-	middleware.replaydb.ReadDir("./input")
-	middleware.GenPactWithProvider()
-}
-
-func (middleware *middleWare) GenerateJSON(w http.ResponseWriter) {
-	middleware.replaydb.ReadDir("./input")
-	filename := middleware.replaydb.SerilizeToFile()
-	middleware.returnFile(w, filename, "JSONFile.json")
-}
-
-func (middleware *middleWare) GeneratePACT(w http.ResponseWriter) {
-	middleware.replaydb.ReadDir("./input")
-	middleware.GenPactWithProvider()
-	pactfile := middleware.GetPactFile()
-	if len(pactfile) > 0 {
-		middleware.returnFile(w, pactfile, "ConsumerContracts.json")
-	} else {
-		log.Println("No Pact File Generate ")
-		w.Write([]byte("No Pact File Generate "))
-	}
-}
-
 func (middleware *middleWare) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	newbody := make([]byte, req.ContentLength)
 	req.Body.Read(newbody)
 	path := strings.Split(req.RequestURI, "?")
-
+	log.Println("Orinal path: ", req.RequestURI)
 	log.Println("try to get ", path[0], req.Method, string(newbody))
 
 	if path[0] == "/json" {
@@ -214,6 +136,7 @@ func (middleware *middleWare) ServeHTTP(w http.ResponseWriter, req *http.Request
 	res, err := middleware.replaydb.GetResponse(path[0], req.Method, string(newbody))
 	if err != nil || res == nil {
 		log.Println("Cannot get response from replaydb on offline mode, need hanle in offline handler ", err)
+
 		newRq, err := http.NewRequest(req.Method, req.RequestURI, ioutil.NopCloser(bytes.NewReader(newbody)))
 		if err != nil {
 			log.Println("new http request failed ", err)

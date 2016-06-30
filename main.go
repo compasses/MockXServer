@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/Compasses/MockXServer/middleware"
+	"github.com/compasses/MockXServer/middleware"
 )
 
 const banner string = `

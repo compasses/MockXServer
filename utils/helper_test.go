@@ -16,8 +16,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/franela/goreq"
+
 	"golang.org/x/text/encoding"
-	//"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 )

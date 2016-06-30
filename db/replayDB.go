@@ -50,6 +50,13 @@ func (replay *ReplayDB) StoreRequest(path, method, reqBody, respBody string, sta
 			err = fmt.Errorf("create bucket: %s", err)
 			return err
 		}
+
+		err = pathBucket.Put([]byte(method+replay.reqRspKey), finalResp)
+		if err != nil {
+			err = fmt.Errorf("store bucket error: %s", err)
+			return err
+		}
+
 		methodBucket, err := pathBucket.CreateBucketIfNotExists([]byte(method))
 		err = methodBucket.Put(finalReq, finalResp)
 		if err != nil {
@@ -81,11 +88,11 @@ func (replay *ReplayDB) GetResponse(path, method, reqBody string) (resp []byte, 
 		}
 		resp = methodBucket.Get(req)
 		if resp == nil {
-			// use fuzzy match to get result
-			//resp = pathBucket.Get([]byte(method + replay.reqRspKey))
-			//if resp == nil {
-			err = fmt.Errorf("No response for path and method:%s", path+method)
-			//}
+			//use fuzzy match to get result
+			resp = pathBucket.Get([]byte(method + replay.reqRspKey))
+			if resp == nil {
+				err = fmt.Errorf("No response for path and method:%s", path+method)
+			}
 		}
 		return nil
 	})
