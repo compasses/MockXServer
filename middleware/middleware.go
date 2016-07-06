@@ -136,7 +136,7 @@ func (middleware *middleWare) ServeHTTP(w http.ResponseWriter, req *http.Request
 	res, err := middleware.replaydb.GetResponse(path[0], req.Method, string(newbody))
 	if err != nil || res == nil {
 		log.Println("Cannot get response from replaydb on offline mode, need hanle in offline handler ", err)
-
+		middleware.SaveNotFound(path[0], req.Method, string(newbody), "...xxx...", 200)
 		newRq, err := http.NewRequest(req.Method, req.RequestURI, ioutil.NopCloser(bytes.NewReader(newbody)))
 		if err != nil {
 			log.Println("new http request failed ", err)

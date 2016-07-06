@@ -1,0 +1,17 @@
+http://localhost:8080/sbo/api/v1/ChannelAccounts?filter=(account eq 'sss@ss2.com') and (salesChannel.id eq 2)
+
+[
+{
+  "id": 1,
+  "customerId": 2,
+  "salesChannel": {
+    "id": 3,
+    "name": "YZ"
+  },
+  "contactId": null,
+  "lastPurchase": "2015-09-21T22:10:00.000Z",
+  "account": "sss@ss2.com",
+  "resetPasswordLink": null,
+  "unifiedAccount": "sss@ss2.com"
+}
+]

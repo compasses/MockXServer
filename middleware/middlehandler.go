@@ -10,12 +10,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/compasses/MockXServer/utils"
 )
 
 func (middleware *middleWare) SaveNotFound(path, method, reqBody, respBody string, statusCode int) (err error) {
-	finalReq, finalResp, err := utils.JsonNormalize(reqBody, respBody, statusCode)
 	if err != nil {
 		log.Println("JSON Normalize error ", err)
 	}
@@ -26,8 +23,8 @@ func (middleware *middleWare) SaveNotFound(path, method, reqBody, respBody strin
 	result := map[string]interface{}{
 		path: map[string]interface{}{
 			method: map[string]interface{}{
-				"request":  finalReq,
-				"response": finalResp,
+				"request":  reqBody,
+				"response": respBody,
 			},
 		},
 	}

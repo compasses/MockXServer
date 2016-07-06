@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/compasses/MockXServer/utils"
@@ -58,6 +59,9 @@ func (replay *ReplayDB) ReadDir(dir string) {
 	}
 
 	for _, file := range files {
+		if strings.Contains(file.Name(), "Incomplete") {
+			continue
+		}
 		replay.ReadJsonFiles(dir + "/" + file.Name())
 	}
 }
