@@ -106,6 +106,24 @@ func NewMiddleware() *middleWare {
 	return middleware
 }
 
+func (middleware *middleWare) PreHandle(w http.ResponseWriter, req *http.Request) bool {
+	path := strings.Split(req.RequestURI, "?")
+	log.Println("prehandle path: ", req.RequestURI)
+
+	if path[0] == "/json" {
+		middleware.GenerateJSON(w)
+		return true
+	} else if path[0] == "/pact" {
+		middleware.GeneratePACT(w)
+		return true
+	} else if path[0] == "/truncate" {
+		middleware.Truncate(w)
+		return true
+	}
+
+	return false
+}
+
 func (middle *middleWare) Run() {
 	log.Println("Listen ON: ", middle.conf.ListenOn)
 	if middle.conf.TLS == "on" {
@@ -115,23 +133,11 @@ func (middle *middleWare) Run() {
 	}
 }
 
-func (middleware *middleWare) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (middleware *middleWare) HandleOffline(w http.ResponseWriter, req *http.Request) {
 	newbody := make([]byte, req.ContentLength)
 	req.Body.Read(newbody)
 	path := strings.Split(req.RequestURI, "?")
-	log.Println("Orinal path: ", req.RequestURI)
-	log.Println("try to get ", path[0], req.Method, string(newbody))
-
-	if path[0] == "/json" {
-		middleware.GenerateJSON(w)
-		return
-	} else if path[0] == "/pact" {
-		middleware.GeneratePACT(w)
-		return
-	} else if path[0] == "/truncate" {
-		middleware.Truncate(w)
-		return
-	}
+	log.Println("offline handle , try to get ", path[0], req.Method, string(newbody))
 
 	res, err := middleware.replaydb.GetResponse(path[0], req.Method, string(newbody))
 	if err != nil || res == nil {
@@ -162,5 +168,19 @@ func (middleware *middleWare) ServeHTTP(w http.ResponseWriter, req *http.Request
 			}
 			break
 		}
+	}
+}
+
+func (middleware *middleWare) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	preHandled := middleware.PreHandle(w, req)
+	if preHandled {
+		return
+	}
+
+	if middleware.conf.RunMode == "online" {
+		middleware.handler.ServeHTTP(w, req)
+	} else {
+		// firstly try to get from replaydb
+		middleware.HandleOffline(w, req)
 	}
 }

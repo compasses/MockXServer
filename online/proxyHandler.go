@@ -90,7 +90,6 @@ func (proxy *ProxyRoute) doReq(NeedLog bool, path, method, requestBody string, n
 		if err != nil {
 			log.Println("Store data failed ", err)
 		}
-		//proxy.db.SerilizeToFile()
 	}
 	return
 }
@@ -108,7 +107,7 @@ func (proxy *ProxyRoute) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	newRq.Header = req.Header
 	path := strings.Split(req.RequestURI, "?")
 
-	LogOutPut(NeedLog, "New Request: ")
+	LogOutPut(NeedLog, "online handle, New Request: ")
 	RequstFormat(NeedLog, newRq, string(newbody))
 	resphttp, res := proxy.doReq(NeedLog, path[0], req.Method, string(newbody), newRq)
 	for key, _ := range resphttp.Header {

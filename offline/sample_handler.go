@@ -45,7 +45,9 @@ func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	var result interface{}
 	dec.Decode(&result)
 	log.Println("Req:", result)
-	w.Write([]byte("<h1>Welcome to compasses/MockXServer</h1>"))
+	//w.Write([]byte("<h1>Welcome to compasses/MockXServer</h1>"))
+	w.WriteHeader(200)
+	w.Write([]byte("[]"))
 }
 
 //BackupDB backupdb
