@@ -69,7 +69,7 @@ func BackupDB(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 func PlaceOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	r.ParseForm()
 	dec := json.NewDecoder(r.Body)
-	var result OrderCreate
+	var result CheckoutCartPlayLoad
 	dec.Decode(&result)
 	log.Printf("got place order request: %+v\n", result)
 	newOrder := RepoCreateOrder(result)
@@ -120,14 +120,14 @@ func GetSalesOrders(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 func Checkout(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	r.ParseForm()
 	dec := json.NewDecoder(r.Body)
-	var result CheckoutShoppingCart
+	var result CheckoutCartPlayLoad
 	err := dec.Decode(&result)
 	if err != nil {
 		HandleError(err)
 	}
 	log.Println("CheckoutShoppingCart req: ", result)
 
-	resp := RepoCheckoutShoppingCart(result.ShoppingCart)
+	resp := RepoCheckoutShoppingCart(result)
 	log.Println("CheckoutShoppingCart resp: ", resp)
 
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -322,7 +322,7 @@ func MiscCheck(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	log.Println("misc check parames ", checkParam)
-	Rs := RetrieveByMapLevel(checkParam, []string{"miscParam", "lines"})
+	Rs := RetrieveByMapLevel(checkParam, []string{"lines"})
 	lines := Rs.([]interface{})
 
 	resp := make(map[string][]interface{})

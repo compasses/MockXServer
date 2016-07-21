@@ -18,19 +18,19 @@ var routes = Routes{
 	Route{
 		"ATS Check",
 		"POST",
-		"/sbo/service/EShopService@getATS",
+		"/api/EshopAdapter/Product/v1/getATS",
 		ATS,
 	},
 	Route{
 		"Recommendation Products",
 		"POST",
-		"/sbo/service/ProductService@getRecommendationProductIds",
+		"/api/EshopAdapter/Product/v1/getRecommendationProductIds",
 		RecommandationProducts,
 	},
 	Route{
 		"Create Customer",
 		"POST",
-		"/sbo/service/CustomerService@createEShopCustomer",
+		"/api/EshopAdapter/Customer/v1/",
 		CreateCustomer,
 	},
 	Route{
@@ -72,19 +72,19 @@ var routes = Routes{
 	Route{
 		"MiscCheck",
 		"POST",
-		"/sbo/service/EShopService@miscCheck",
+		"/api/EshopAdapter/Product/v1/miscCheck",
 		MiscCheck,
 	},
 	Route{
 		"Checkout",
 		"POST",
-		"/sbo/service/EShopService@checkoutShoppingCart",
+		"/api/EshopAdapter/Order/v1/checkoutShoppingCart",
 		Checkout,
 	},
 	Route{
 		"PlaceOrder",
 		"POST",
-		"/sbo/service/EShopService@placeOrder",
+		"/api/EshopAdapter/Order/v1/placeOrder",
 		PlaceOrder,
 	},
 	Route{

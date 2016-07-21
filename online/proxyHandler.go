@@ -76,17 +76,17 @@ func (proxy *ProxyRoute) doReq(NeedLog bool, path, method, requestBody string, n
 		}
 
 		if NeedLog {
-			if resp.StatusCode != 200 {
+			if resp.StatusCode == 500 || resp.StatusCode == 404 {
 				FailNum++
 			} else {
 				SuccNum++
+				err = proxy.db.StoreRequest(path, method, requestBody, string(res), resp.StatusCode)
 			}
 		}
 
 		LogOutPut(NeedLog, "Get response : ")
 		ResponseFormat(NeedLog, resp, string(res))
 
-		err = proxy.db.StoreRequest(path, method, requestBody, string(res), resp.StatusCode)
 		if err != nil {
 			log.Println("Store data failed ", err)
 		}
@@ -95,8 +95,14 @@ func (proxy *ProxyRoute) doReq(NeedLog bool, path, method, requestBody string, n
 }
 
 func (proxy *ProxyRoute) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	newbody := make([]byte, req.ContentLength)
-	req.Body.Read(newbody)
+	newbody, err := ioutil.ReadAll(req.Body)
+	//make([]byte, req.ContentLength)
+	//req.Body.Read(newbody)
+	if err != nil {
+		log.Println("Read request failed..", err)
+		return
+	}
+
 	NeedLog := strings.Contains(req.RequestURI, proxy.GrabIF)
 
 	newRq, err := http.NewRequest(req.Method, proxy.url+req.RequestURI, ioutil.NopCloser(bytes.NewReader(newbody)))

@@ -123,18 +123,18 @@ func RepoGetSalesOrder(orderId TableId, channelAccountId string) (result interfa
 	return
 }
 
-func GenerateOrder(order OrderCreate, orderId uint64) interface{} {
+func GenerateOrder(order CheckoutCartPlayLoad, orderId uint64) interface{} {
 	return map[string]interface{}{
 		"id":            orderId,
 		"docNumber":     orderId,
-		"billingAddr":   order.EShopOrder.BillingAddress,
-		"shippingAddr":  order.EShopOrder.ShippingAddress,
+		"billingAddr":   order.BillingAddress,
+		"shippingAddr":  order.ShippingAddress,
 		"shippingCost":  "0",
 		"subTotal":      "500",
 		"grossDocTotal": "500",
 		"taxTotal":      "0",
 		"customer": map[string]interface{}{
-			"id": order.EShopOrder.CustomerId,
+			"id": order.CustomerId,
 		},
 		"process": map[string]interface{}{
 			"id":          3,
@@ -244,7 +244,7 @@ func GenerateOrder(order OrderCreate, orderId uint64) interface{} {
 		}}
 }
 
-func RepoCreateOrder(order OrderCreate) interface{} {
+func RepoCreateOrder(order CheckoutCartPlayLoad) interface{} {
 	var newOrder interface{}
 
 	GlobalDB.Update(func(tx *bolt.Tx) error {
@@ -254,10 +254,10 @@ func RepoCreateOrder(order OrderCreate) interface{} {
 			return err
 		}
 		var cusOrderBuck *bolt.Bucket
-		if order.EShopOrder.ChannelAccountId == nil {
+		if order.ChannelAccountId == nil {
 			cusOrderBuck, err = orderBucket.CreateBucketIfNotExists([]byte("GUESTUSER"))
 		} else {
-			cusOrderBuck, err = orderBucket.CreateBucketIfNotExists([]byte(order.EShopOrder.ChannelAccountId.(string)))
+			cusOrderBuck, err = orderBucket.CreateBucketIfNotExists([]byte(order.ChannelAccountId.(string)))
 		}
 		if err != nil {
 			HandleError(err)
