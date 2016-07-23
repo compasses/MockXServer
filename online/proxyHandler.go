@@ -18,11 +18,10 @@ import (
 type ProxyRoute struct {
 	client *http.Client
 	url    string
-	GrabIF string
 	db     *db.ReplayDB
 }
 
-func NewProxyHandler(newurl, grabIF string, db *db.ReplayDB) *ProxyRoute {
+func NewProxyHandler(newurl string, db *db.ReplayDB) *ProxyRoute {
 	tr := &http.Transport{
 		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
 		DisableCompression: true,
@@ -33,22 +32,9 @@ func NewProxyHandler(newurl, grabIF string, db *db.ReplayDB) *ProxyRoute {
 		TLSHandshakeTimeout: 10 * time.Second,
 	}
 
-	if grabIF != "" {
-		go func() {
-			for {
-				// Wait for 10s.
-				time.Sleep(10 * time.Second)
-				if (FailNum + SuccNum) > 0 {
-					log.Printf("\n\tIF: %s SuccNum:%d FailNum:%d FailureRate:%f\n\n", grabIF, SuccNum, FailNum, float32((FailNum))/float32((FailNum+SuccNum)))
-				}
-			}
-		}()
-	}
-
 	return &ProxyRoute{
 		client: &http.Client{Transport: tr},
 		url:    newurl,
-		GrabIF: grabIF,
 		db:     db}
 }
 
@@ -103,8 +89,6 @@ func (proxy *ProxyRoute) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	NeedLog := strings.Contains(req.RequestURI, proxy.GrabIF)
-
 	newRq, err := http.NewRequest(req.Method, proxy.url+req.RequestURI, ioutil.NopCloser(bytes.NewReader(newbody)))
 	if err != nil {
 		log.Println("new request error ", err)
@@ -113,9 +97,9 @@ func (proxy *ProxyRoute) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	newRq.Header = req.Header
 	path := strings.Split(req.RequestURI, "?")
 
-	LogOutPut(NeedLog, "online handle, New Request: ")
-	RequstFormat(NeedLog, newRq, string(newbody))
-	resphttp, res := proxy.doReq(NeedLog, path[0], req.Method, string(newbody), newRq)
+	LogOutPut(true, "online handle, New Request: ")
+	RequstFormat(true, newRq, string(newbody))
+	resphttp, res := proxy.doReq(true, path[0], req.Method, string(newbody), newRq)
 	for key, _ := range resphttp.Header {
 		w.Header().Set(key, strings.Join(resphttp.Header[key], ";"))
 	}

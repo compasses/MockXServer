@@ -23,7 +23,6 @@ type config struct {
 	RemoteServer string
 	ListenOn     string
 	LogFile      string
-	GrabIF       string
 }
 
 func GetConfiguration() (conf *config, err error) {
@@ -99,7 +98,7 @@ func NewMiddleware() *middleWare {
 		middleware.runmode = 0
 	} else {
 		log.Println("MockXServer Run in online mode...")
-		middleware.handler = online.NewProxyHandler(conf.RemoteServer, conf.GrabIF, middleware.replaydb)
+		middleware.handler = online.NewProxyHandler(conf.RemoteServer, middleware.replaydb)
 		middleware.runmode = 1
 	}
 
