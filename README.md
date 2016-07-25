@@ -1,5 +1,5 @@
 # MockXServer
-
+[![Build Status](https://travis-ci.org/compasses/MockXServer.svg?branch=master)](https://travis-ci.org/compasses/MockXServer)
 ## Release
 
 ## 说明
