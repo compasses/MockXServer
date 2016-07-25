@@ -1,0 +1,4 @@
+language: go
+script: sh ./build.sh
+notifications:
+  email: false
