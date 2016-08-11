@@ -30,6 +30,7 @@ online时，会让其链接真正的service，但是要起到debug的作用。�
 
 ## 结构图：
 ![architecture](./architecture.PNG)
+
 整体结构较为简单，MiddleWare层封装了offline和online。offline和online会各自访问DB进行读写。
 
 ## 运行流程图
