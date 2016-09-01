@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set - ex
 
 # Create go binary and package verifier + mock service into distribution
 VERSION=$(go version)
