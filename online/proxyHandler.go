@@ -103,7 +103,7 @@ func (proxy *ProxyRoute) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	for key, _ := range resphttp.Header {
 		w.Header().Set(key, strings.Join(resphttp.Header[key], ";"))
 	}
-
+	w.WriteHeader(resphttp.StatusCode)
 	w.Write(res)
 
 }

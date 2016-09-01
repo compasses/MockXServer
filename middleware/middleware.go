@@ -33,6 +33,7 @@ func GetConfiguration() (conf *config, err error) {
 		log.Println("Just run in offline mode")
 		return nil, err
 	}
+
 	data, err := ioutil.ReadAll(file)
 	if err != nil {
 		log.Println("read file failed...", err)
@@ -42,6 +43,7 @@ func GetConfiguration() (conf *config, err error) {
 		json.Unmarshal(data, &conf)
 		log.Println("get configuration:", string(data))
 	}
+
 	return conf, nil
 }
 
@@ -140,12 +142,14 @@ func (middleware *middleWare) HandleOffline(w http.ResponseWriter, req *http.Req
 
 	res, err := middleware.replaydb.GetResponse(path[0], req.Method, string(newbody))
 	if err != nil || res == nil {
-		log.Println("Cannot get response from replaydb on offline mode, need hanle in offline handler ", err)
+		log.Println("Cannot get response from replaydb on offline mode, need hanle in offline/online handler ", err)
 		middleware.SaveNotFound(path[0], req.Method, string(newbody), "...xxx...", 200)
+
 		newRq, err := http.NewRequest(req.Method, req.RequestURI, ioutil.NopCloser(bytes.NewReader(newbody)))
 		if err != nil {
 			log.Println("new http request failed ", err)
 		}
+		utils.RequstFormat(true, newRq, string(newbody))
 		middleware.handler.ServeHTTP(w, newRq)
 	} else {
 		result, _ := utils.TOJsonInterface(res)

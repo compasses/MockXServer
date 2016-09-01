@@ -28,6 +28,9 @@ online时，会让其链接真正的service，但是要起到debug的作用。�
 4. listenOn, APIService的监听地址。
 5. LogFile, 日志文件名字。留空的话直接打印到命令行窗口。
 
+## 运行
+在 Mac或Linux 上执行make 即可，在windows上执行 *sh buil.sh*。可执行文件位于cmd目录下。
+
 ## 结构图：
 ![architecture](./architecture.PNG)
 

@@ -1,7 +1,0 @@
-{
-	"RunMode":"online",
-	"TLS":"off",
-	"RemoteServer":"http://10.128.161.107:8083",
-	"ListenOn":"0.0.0.0:9595",
-	"LogFile":""
-}
