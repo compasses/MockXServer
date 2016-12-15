@@ -39,10 +39,15 @@ func (replay *ReplayDB) StoreRequestFromJson(path, method string, reqBody, respB
 }
 
 func (replay *ReplayDB) StoreRequest(path, method, reqBody, respBody string, statusCode int) (err error) {
+	if len(reqBody) == 0 {
+		reqBody = replay.reqRspKey
+	}
+
 	finalReq, finalResp, err := utils.JsonNormalize(reqBody, respBody, statusCode)
 	if err != nil {
 		log.Println("JSON Normalize error ", err)
 	}
+	log.Println("going save req: ", path, " rqbody ", reqBody)
 
 	replay.db.Update(func(tx *bolt.Tx) error {
 		pathBucket, err := tx.CreateBucketIfNotExists([]byte(path))
@@ -69,6 +74,10 @@ func (replay *ReplayDB) StoreRequest(path, method, reqBody, respBody string, sta
 }
 
 func (replay *ReplayDB) GetResponse(path, method, reqBody string) (resp []byte, err error) {
+	if len(reqBody) == 0 {
+		reqBody = replay.reqRspKey
+	}
+
 	replay.db.View(func(tx *bolt.Tx) error {
 
 		pathBucket := tx.Bucket([]byte(path))
@@ -81,11 +90,12 @@ func (replay *ReplayDB) GetResponse(path, method, reqBody string) (resp []byte, 
 			err = fmt.Errorf("No response for path and method:%s", path+method)
 			return err
 		}
-		var req []byte
-		req, err = utils.JsonNormalizeSingle(reqBody)
-		if err != nil {
-			return err
-		}
+
+		req := []byte(reqBody)
+		// req, err = utils.JsonNormalizeSingle(reqBody)
+		// if err != nil {
+		// 	return err
+		// }
 		resp = methodBucket.Get(req)
 		if resp == nil {
 			//use fuzzy match to get result

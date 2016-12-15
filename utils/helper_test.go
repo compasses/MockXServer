@@ -67,11 +67,9 @@ func TestGetIntFromStr(t *testing.T) {
 	valId := regexp.MustCompile(`(\d+)`)
 	val, _ := strconv.Atoi(valId.FindString(input))
 	fmt.Println("id :", val)
-	var cc CustomerAddress
 	var ni []interface{}
 	ni = append(ni, "ok")
 	ni = append(ni, 2323)
-	ni = append(ni, cc)
 
 	fmt.Println("interfaces values ", ni)
 }

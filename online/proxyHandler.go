@@ -82,8 +82,7 @@ func (proxy *ProxyRoute) doReq(NeedLog bool, path, method, requestBody string, n
 
 func (proxy *ProxyRoute) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	newbody, err := ioutil.ReadAll(req.Body)
-	//make([]byte, req.ContentLength)
-	//req.Body.Read(newbody)
+
 	if err != nil {
 		log.Println("Read request failed..", err)
 		return
@@ -95,11 +94,10 @@ func (proxy *ProxyRoute) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	newRq.Header = req.Header
-	path := strings.Split(req.RequestURI, "?")
 
 	LogOutPut(true, "online handle, New Request: ")
 	RequstFormat(true, newRq, string(newbody))
-	resphttp, res := proxy.doReq(true, path[0], req.Method, string(newbody), newRq)
+	resphttp, res := proxy.doReq(true, req.RequestURI, req.Method, string(newbody), newRq)
 	for key, _ := range resphttp.Header {
 		w.Header().Set(key, strings.Join(resphttp.Header[key], ";"))
 	}

@@ -18,11 +18,12 @@ import (
 )
 
 type config struct {
-	RunMode      string
-	TLS          string
-	RemoteServer string
-	ListenOn     string
-	LogFile      string
+	RunMode        string
+	TLS            string
+	RemoteServer   string
+	ListenOn       string
+	OfflineHandler string
+	LogFile        string
 }
 
 func GetConfiguration() (conf *config, err error) {
@@ -137,20 +138,22 @@ func (middle *middleWare) Run() {
 func (middleware *middleWare) HandleOffline(w http.ResponseWriter, req *http.Request) {
 	newbody := make([]byte, req.ContentLength)
 	req.Body.Read(newbody)
-	path := strings.Split(req.RequestURI, "?")
-	log.Println("offline handle , try to get ", path[0], req.Method, string(newbody))
+	log.Println("offline handle , try to get ", req.RequestURI, req.Method, string(newbody))
 
-	res, err := middleware.replaydb.GetResponse(path[0], req.Method, string(newbody))
+	res, err := middleware.replaydb.GetResponse(req.RequestURI, req.Method, string(newbody))
 	if err != nil || res == nil {
-		log.Println("Cannot get response from replaydb on offline mode, need hanle in offline/online handler ", err)
-		middleware.SaveNotFound(path[0], req.Method, string(newbody), "...xxx...", 200)
+		log.Println("Cannot get response from replaydb on offline mode", err)
+		if middleware.conf.OfflineHandler != "off" {
+			log.Println("Need handle request in offline handler")
+			middleware.SaveNotFound(req.RequestURI, req.Method, string(newbody), "...xxx...", 200)
 
-		newRq, err := http.NewRequest(req.Method, req.RequestURI, ioutil.NopCloser(bytes.NewReader(newbody)))
-		if err != nil {
-			log.Println("new http request failed ", err)
+			newRq, err := http.NewRequest(req.Method, req.RequestURI, ioutil.NopCloser(bytes.NewReader(newbody)))
+			if err != nil {
+				log.Println("new http request failed ", err)
+			}
+			utils.RequstFormat(true, newRq, string(newbody))
+			middleware.handler.ServeHTTP(w, newRq)
 		}
-		utils.RequstFormat(true, newRq, string(newbody))
-		middleware.handler.ServeHTTP(w, newRq)
 	} else {
 		result, _ := utils.TOJsonInterface(res)
 		log.Println("Get response from replaydb on offline mode ", (result))
@@ -158,13 +161,7 @@ func (middleware *middleWare) HandleOffline(w http.ResponseWriter, req *http.Req
 		for key, value := range resultmap {
 			status, _ := strconv.Atoi(key)
 			w.WriteHeader(status)
-			stream := []byte("")
-			if value != nil {
-				stream, err = json.Marshal(value)
-				if err != nil {
-					log.Println("Marshal failed ", err, stream)
-				}
-			}
+			stream := []byte(value.(string))
 			_, err = w.Write(stream)
 			if err != nil {
 				log.Println("Get response from replaydb  but write error ", err)
@@ -175,6 +172,7 @@ func (middleware *middleWare) HandleOffline(w http.ResponseWriter, req *http.Req
 }
 
 func (middleware *middleWare) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	preHandled := middleware.PreHandle(w, req)
 	if preHandled {
 		return

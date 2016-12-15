@@ -3,5 +3,6 @@
 	"TLS":"off",
 	"RemoteServer":"http://localhost:30008",
 	"ListenOn":"0.0.0.0:9595",
+	"OfflineHandler":"off",
 	"LogFile":""
 }
