@@ -36,6 +36,7 @@ RunMode为offline时，作用类似于MockServer，默认从ReplayDB中请求响
 ## 简单使用说明
 1. 打开online模式，运行mock server，会将请求、响应消息信息保存到ReplayDB文件中；
 2. 分享给其他开发者ReplayDB，只需配置为offline模式，所有online模式中记录的API都能正常的响应。
+
 ### example
 一个Get请求的记录：
 ```
