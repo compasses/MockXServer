@@ -36,14 +36,57 @@ RunMode为offline时，作用类似于MockServer，默认从ReplayDB中请求响
 ## 简单使用说明
 1. 打开online模式，运行mock server，会将请求、响应消息信息保存到ReplayDB文件中；
 2. 分享给其他开发者ReplayDB，只需配置为offline模式，所有online模式中记录的API都能正常的响应。
+### example
+一个Get请求的记录：
+```
+        "/api/CreditCards/v1/getCardsByCustomerId/120016694099968": {
+            "GET": [
+                {
+                    "request": null,
+                    "response": {
+                        "200": "[{\"id\":120041944596480,\"last4Digits\":\"0005\",\"cardType\":\"AMERICANEXPRESS\",\"nameOnCard\":\"Jet 1\",\"expiryYear\":\"2222\",\"expiryMonth\":\"12\",\"customerId\":120016694099968,\"creationTime\":null,\"updateTime\":null},{\"id\":120043117346816,\"last4Digits\":\"5904\",\"cardType\":\"DINERSCLUB\",\"nameOnCard\":\"Jet 2\",\"expiryYear\":\"2222\",\"expiryMonth\":\"12\",\"customerId\":120016694099968,\"creationTime\":null,\"updateTime\":null},{\"id\":120045496467456,\"last4Digits\":\"1117\",\"cardType\":\"DISCOVER\",\"nameOnCard\":\"Jet 3\",\"expiryYear\":\"2222\",\"expiryMonth\":\"12\",\"customerId\":120016694099968,\"creationTime\":null,\"updateTime\":null},{\"id\":120048522469376,\"last4Digits\":\"4444\",\"cardType\":\"MASTERCARD\",\"nameOnCard\":\"Jet 4\",\"expiryYear\":\"2322\",\"expiryMonth\":\"12\",\"customerId\":120016694099968,\"creationTime\":null,\"updateTime\":null},{\"id\":120049814609920,\"last4Digits\":\"5100\",\"cardType\":\"MASTERCARD\",\"nameOnCard\":\"Jet 5\",\"expiryYear\":\"2323\",\"expiryMonth\":\"11\",\"customerId\":120016694099968,\"creationTime\":null,\"updateTime\":null}]"
+                    }
+                }
+            ]
+        }
+```
+
+两次Post请求的记录：
+```
+"/api/CreditCardCheckout/v1/checkout": {
+      "POST": [
+        {
+          "request": {
+            "amount": 100,
+            "currencyCode": "USD",
+            "id": 118650906992640,
+            "paymentAccountId": 118628324237312
+          },
+          "response": {
+            "200": "{\"pnref\":\"A10AA261D8C8\",\"paymentResponse\":{\"requestId\":\"FE60350123E15D3A8DF6D44BE67110CF\",\"result\":0,\"respMsg\":\"Approved\",\"status\":true,\"authCode\":\"040PNI\",\"avsAddr\":null,\"avsZip\":null,\"preFpsMsg\":null,\"postFpsMsg\":null,\"transError\":null,\"pnref\":\"A10AA261D8C8\"}}"
+          }
+        },
+        {
+          "request": {
+            "amount": 222,
+            "currencyCode": "USD",
+            "id": 118650906992640,
+            "paymentAccountId": 118628324237312
+          },
+          "response": {
+            "200": "{\"pnref\":\"A70AA0C6F56C\",\"paymentResponse\":{\"requestId\":\"62B4918913F4A4FE7BB826888BC7B29A\",\"result\":0,\"respMsg\":\"Approved\",\"status\":true,\"authCode\":\"537PNI\",\"avsAddr\":null,\"avsZip\":null,\"preFpsMsg\":null,\"postFpsMsg\":null,\"transError\":null,\"pnref\":\"A70AA0C6F56C\"}}"
+          }
+        }
+      ]
+    }
+```
+上面的结果是通过访问**http(s)://MockXServer_IP:Port/json**获得的json记录。
+
 
 ## 结构图：
 ![architecture](./architecture.PNG)
 
 整体结构较为简单，MiddleWare层封装了offline和online。offline和online会各自访问DB进行读写。
-
-## 运行流程图
-![workflow](./workflow.PNG)
 
 ### Third party lib
 1. [httprouter](http://godoc.org/github.com/julienschmidt/httprouter)
